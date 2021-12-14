@@ -127,8 +127,21 @@ func (c *Compiler) Compile(node parser.Node) error {
 		if node.Token == token.Dec {
 			op = token.SubAssign
 		}
-		return c.compileAssign(node, []parser.Expr{node.Expr},
+		err := c.compileAssign(node, []parser.Expr{node.Expr},
 			[]parser.Expr{&parser.IntLit{Value: 1}}, op)
+		if err == nil {
+			ident, _ := resolveAssignLHS(node.Expr)
+			symbol, ok := c.symbolTable.store[ident]
+			if ok {
+				switch symbol.Expr.(type) {
+				case *parser.IntLit, *parser.FloatLit, *parser.CharLit:
+					break
+				default:
+					return c.errorf(node, "invalid operation: ++/-- (non-numeric type)")
+				}
+			}
+		}
+		return err
 	case *parser.ParenExpr:
 		if err := c.Compile(node.Expr); err != nil {
 			return err
@@ -668,17 +681,6 @@ func (c *Compiler) compileAssign(
 	} else {
 		if !exists {
 			return c.errorf(node, "unresolved reference '%s'", ident)
-		} else {
-			symbol, ok := c.symbolTable.store[ident]
-			if ok {
-				switch symbol.Expr.(type) {
-				case *parser.IntLit, *parser.FloatLit, *parser.CharLit:
-					break
-				default:
-					return c.errorf(node, "invalid operation: ++/-- (non-numeric type)")
-
-				}
-			}
 		}
 
 	}

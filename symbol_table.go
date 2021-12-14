@@ -62,11 +62,28 @@ func (t *SymbolTable) Define(name string, expr ...parser.Expr) *Symbol {
 		symbol.Scope = ScopeLocal
 	}
 	if len(expr) > 0 {
-		symbol.Expr = expr[0]
+		_symbol, ok := t.getStore(expr[0].String())
+		if ok {
+			symbol.Expr = _symbol.Expr
+		} else {
+			symbol.Expr = expr[0]
+		}
 	}
 	t.store[name] = symbol
 	t.updateMaxDefs(symbol.Index + 1)
 	return symbol
+}
+func (t *SymbolTable) getStore(name string) (*Symbol, bool) {
+
+	_symbol, found := t.store[name]
+	if !found {
+		if t.parent != nil {
+			return t.parent.getStore(name)
+		}
+		return _symbol, found
+	}
+	return _symbol, found
+
 }
 
 // DefineBuiltin adds a symbol for builtin function.
