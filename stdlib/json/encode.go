@@ -159,12 +159,17 @@ func Encode(o tengo.Object) ([]byte, error) {
 		b = append(b, ']')
 	case *tengo.Map:
 		b = append(b, '{')
-		len1 := len(o.Value) - 1
+		len1 := len(o.Value.Keys()) - 1
 		idx := 0
-		for key, value := range o.Value {
+		for _, key := range o.Value.Keys() {
+			value, _ := o.Value.Get(key)
 			b = encodeString(b, key)
 			b = append(b, ':')
-			eb, err := Encode(value)
+			tmp_v, err := tengo.FromInterface(value)
+			if err != nil {
+				return nil, err
+			}
+			eb, err := Encode(tmp_v)
 			if err != nil {
 				return nil, err
 			}

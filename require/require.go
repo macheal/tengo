@@ -10,6 +10,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"github.com/iancoleman/orderedmap"
 	"github.com/macheal/tengo/v2"
 	"github.com/macheal/tengo/v2/parser"
 	"github.com/macheal/tengo/v2/token"
@@ -161,7 +162,7 @@ func Equal(
 		equalObjectMap(t, expected.Value,
 			actual.(*tengo.Map).Value, msg...)
 	case *tengo.ImmutableMap:
-		equalObjectMap(t, expected.Value,
+		equalObjectImmutableMap(t, expected.Value,
 			actual.(*tengo.ImmutableMap).Value, msg...)
 	case *tengo.CompiledFunction:
 		equalCompiledFunction(t, expected,
@@ -284,6 +285,19 @@ func equalFileSet(
 }
 
 func equalObjectMap(
+	t *testing.T,
+	expected, actual orderedmap.OrderedMap, //map[string]tengo.Object,
+	msg ...interface{},
+) {
+	Equal(t, len(expected.Keys()), len(actual.Keys()), msg...)
+	for _, key := range expected.Keys() {
+		expectedVal, _ := expected.Get(key)
+		actualVal, _ := actual.Get(key)
+		Equal(t, expectedVal, actualVal, msg...)
+	}
+}
+
+func equalObjectImmutableMap(
 	t *testing.T,
 	expected, actual map[string]tengo.Object,
 	msg ...interface{},

@@ -12,6 +12,7 @@ import (
 	"unicode/utf16"
 	"unicode/utf8"
 
+	"github.com/iancoleman/orderedmap"
 	"github.com/macheal/tengo/v2"
 )
 
@@ -134,7 +135,8 @@ func (d *decodeState) array() (tengo.Object, error) {
 }
 
 func (d *decodeState) object() (tengo.Object, error) {
-	m := make(map[string]tengo.Object)
+	// m := make(map[string]tengo.Object)
+	m := orderedmap.New()
 	for {
 		// Read opening " of string key or closing }.
 		d.scanWhile(scanSkipSpace)
@@ -170,7 +172,8 @@ func (d *decodeState) object() (tengo.Object, error) {
 			return nil, err
 		}
 
-		m[key] = o
+		m.Set(key, o)
+		// m[key] = o
 
 		// Next token must be , or }.
 		if d.opcode == scanSkipSpace {
@@ -183,7 +186,7 @@ func (d *decodeState) object() (tengo.Object, error) {
 			panic(phasePanicMsg)
 		}
 	}
-	return &tengo.Map{Value: m}, nil
+	return &tengo.Map{Value: *m}, nil
 }
 
 func (d *decodeState) literal() (tengo.Object, error) {
