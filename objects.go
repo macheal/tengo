@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/iancoleman/orderedmap"
 	"github.com/macheal/tengo/v2/parser"
 	"github.com/macheal/tengo/v2/token"
 )
@@ -923,7 +924,7 @@ func (o *ImmutableMap) Copy() Object {
 	for k, v := range o.Value {
 		c[k] = v.Copy()
 	}
-	return &Map{Value: c}
+	return &ImmutableMap{Value: c}
 }
 
 // IsFalsy returns true if the value of the type is falsy.
@@ -950,8 +951,8 @@ func (o *ImmutableMap) IndexGet(index Object) (res Object, err error) {
 func (o *ImmutableMap) Equals(x Object) bool {
 	var xVal map[string]Object
 	switch x := x.(type) {
-	case *Map:
-		xVal = x.Value
+	// case *Map:
+	// 	xVal = x.Value
 	case *ImmutableMap:
 		xVal = x.Value
 	default:
@@ -975,7 +976,7 @@ func (o *ImmutableMap) Iterate() Iterator {
 	for k := range o.Value {
 		keys = append(keys, k)
 	}
-	return &MapIterator{
+	return &ImmutableMapIterator{
 		v: o.Value,
 		k: keys,
 		l: len(keys),
@@ -1180,7 +1181,8 @@ func (o *Int) Equals(x Object) bool {
 // Map represents a map of objects.
 type Map struct {
 	ObjectImpl
-	Value map[string]Object
+	Value orderedmap.OrderedMap
+	// Value map[string]Object
 }
 
 // TypeName returns the name of the type.
@@ -1190,46 +1192,61 @@ func (o *Map) TypeName() string {
 
 func (o *Map) String() string {
 	var pairs []string
-	for k, v := range o.Value {
-		pairs = append(pairs, fmt.Sprintf("%s: %s", k, v.String()))
+	for _, k := range o.Value.Keys() {
+		// for k, v := range o.Value {
+		v, _ := o.Value.Get(k)
+		pairs = append(pairs, fmt.Sprintf("%s: %s", k, v))
 	}
 	return fmt.Sprintf("{%s}", strings.Join(pairs, ", "))
 }
 
 // Copy returns a copy of the type.
 func (o *Map) Copy() Object {
-	c := make(map[string]Object)
-	for k, v := range o.Value {
-		c[k] = v.Copy()
+	c := orderedmap.New() // make(map[string]Object)
+	for _, k := range o.Value.Keys() {
+		// c[k] = o.Value[k].Copy()
+		v, _ := o.Value.Get(k)
+		c.Set(k, v)
 	}
-	return &Map{Value: c}
+	return &Map{Value: *c}
 }
 
 // IsFalsy returns true if the value of the type is falsy.
 func (o *Map) IsFalsy() bool {
-	return len(o.Value) == 0
+	return len(o.Value.Keys()) == 0
 }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
 func (o *Map) Equals(x Object) bool {
-	var xVal map[string]Object
+	var xVal orderedmap.OrderedMap //map[string]Object
 	switch x := x.(type) {
 	case *Map:
 		xVal = x.Value
-	case *ImmutableMap:
-		xVal = x.Value
+	// case *ImmutableMap:
+	// 	xVal = x.Value
 	default:
 		return false
 	}
-	if len(o.Value) != len(xVal) {
+	if len(o.Value.Keys()) != len(xVal.Keys()) {
 		return false
 	}
-	for k, v := range o.Value {
-		tv := xVal[k]
-		if !v.Equals(tv) {
+	for _, k := range o.Value.Keys() {
+		// for k, v := range o.Value {
+		v, _ := o.Value.Get(k)
+		tv, found := xVal.Get(k)
+		if !found {
 			return false
 		}
+		if v != tv {
+			return false
+		}
+		// if !reflect.DeepEqual(v, tv) {
+		// 	return false
+		// }
+		// if !v.Equals(tv) {
+		// 	return false
+		// }
 	}
 	return true
 }
@@ -1241,11 +1258,12 @@ func (o *Map) IndexGet(index Object) (res Object, err error) {
 		err = ErrInvalidIndexType
 		return
 	}
-	res, ok = o.Value[strIdx]
+	r, ok := o.Value.Get(strIdx)
 	if !ok {
 		res = UndefinedValue
 	}
-	return
+	return FromInterface(r)
+	// return ToInterface(r), nil
 }
 
 // IndexSet sets the value for the given key.
@@ -1255,14 +1273,14 @@ func (o *Map) IndexSet(index, value Object) (err error) {
 		err = ErrInvalidIndexType
 		return
 	}
-	o.Value[strIdx] = value
+	o.Value.Set(strIdx, value) // [strIdx] = value
 	return nil
 }
 
 // Iterate creates a map iterator.
 func (o *Map) Iterate() Iterator {
 	var keys []string
-	for k := range o.Value {
+	for _, k := range o.Value.Keys() {
 		keys = append(keys, k)
 	}
 	return &MapIterator{

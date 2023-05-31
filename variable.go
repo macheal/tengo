@@ -92,8 +92,12 @@ func (v *Variable) Map() map[string]interface{} {
 	switch val := v.value.(type) {
 	case *Map:
 		kv := make(map[string]interface{})
-		for mk, mv := range val.Value {
-			kv[mk] = ToInterface(mv)
+		// for mk, mv := range val.Value {
+		for _, mk := range val.Value.Keys() {
+			mv, _ := val.Value.Get(mk)
+
+			tmp, _ := FromInterface(mv)
+			kv[mk] = ToInterface(tmp)
 		}
 		return kv
 	}

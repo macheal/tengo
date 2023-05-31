@@ -212,12 +212,15 @@ func fixDecodedObject(
 			o.Value[i] = fv
 		}
 	case *Map:
-		for k, v := range o.Value {
+		for _, k := range o.Value.Keys() {
+			ov, _ := o.Value.Get(k)
+			v, _ := FromInterface(ov)
 			fv, err := fixDecodedObject(v, modules)
 			if err != nil {
 				return nil, err
 			}
-			o.Value[k] = fv
+			o.Value.Set(k, fv)
+			// o.Value[k] = fv
 		}
 	case *ImmutableMap:
 		modName := inferModuleName(o)

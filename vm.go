@@ -301,7 +301,13 @@ func (v *VM) run() {
 			}
 			v.sp -= numElements
 
-			var m Object = &Map{Value: kv}
+			// var m Object = &Map{Value: kv}
+			t_map := Map{}
+			for key, value := range kv {
+				t_map.Value.Set(key, value)
+			}
+			var m Object = &t_map
+
 			v.allocs--
 			if v.allocs == 0 {
 				v.err = ErrObjectAllocLimit
@@ -334,8 +340,17 @@ func (v *VM) run() {
 				}
 				v.stack[v.sp-1] = immutableArray
 			case *Map:
+				tmp_map := make(map[string]Object)
+				for _, mk := range value.Value.Keys() {
+					mv, _ := value.Value.Get(mk)
+					mo, _ := FromInterface(mv)
+					tmp_map[mk] = mo
+
+				}
+
 				var immutableMap Object = &ImmutableMap{
-					Value: value.Value,
+					Value: tmp_map,
+					// Value: value.Value,
 				}
 				v.allocs--
 				if v.allocs == 0 {

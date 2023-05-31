@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/iancoleman/orderedmap"
 )
 
 var (
@@ -49,8 +51,10 @@ func CountObjects(o Object) (c int) {
 			c += CountObjects(v)
 		}
 	case *Map:
-		for _, v := range o.Value {
-			c += CountObjects(v)
+		for _, k := range o.Value.Keys() {
+			v, _ := o.Value.Get(k)
+			x, _ := FromInterface(v)
+			c += CountObjects(x)
 		}
 	case *ImmutableMap:
 		for _, v := range o.Value {
@@ -221,15 +225,25 @@ func ToInterface(o Object) (res interface{}) {
 			res.([]interface{})[i] = ToInterface(val)
 		}
 	case *Map:
-		res = make(map[string]interface{})
-		for key, v := range o.Value {
-			res.(map[string]interface{})[key] = ToInterface(v)
+		res = orderedmap.New()
+		for _, key := range o.Value.Keys() {
+			v, _ := o.Value.Get(key)
+			res.(*orderedmap.OrderedMap).Set(key, v)
 		}
+		// res = make(map[string]interface{})
+		// for key, v := range o.Value {
+		// 	res.(map[string]interface{})[key] = ToInterface(v)
+		// }
 	case *ImmutableMap:
-		res = make(map[string]interface{})
+		res = orderedmap.New()
 		for key, v := range o.Value {
-			res.(map[string]interface{})[key] = ToInterface(v)
+			println(key)
+			res.(*orderedmap.OrderedMap).Set(key, ToInterface(v))
 		}
+		// res = make(map[string]interface{})
+		// for key, v := range o.Value {
+		// 	res.(map[string]interface{})[key] = ToInterface(v)
+		// }
 	case *Time:
 		res = o.Value
 	case *Error:
@@ -275,17 +289,30 @@ func FromInterface(v interface{}) (Object, error) {
 	case error:
 		return &Error{Value: &String{Value: v.Error()}}, nil
 	case map[string]Object:
-		return &Map{Value: v}, nil
+		m := Map{}
+		for key, value := range v {
+			m.Value.Set(key, value)
+		}
+		return &m, nil
 	case map[string]interface{}:
-		kv := make(map[string]Object)
-		for vk, vv := range v {
-			vo, err := FromInterface(vv)
+		m := Map{}
+		for key, value := range v {
+			vo, err := FromInterface(value)
 			if err != nil {
 				return nil, err
 			}
-			kv[vk] = vo
+			m.Value.Set(key, vo)
 		}
-		return &Map{Value: kv}, nil
+		return &m, nil
+		// kv := make(map[string]Object)
+		// for vk, vv := range v {
+		// 	vo, err := FromInterface(vv)
+		// 	if err != nil {
+		// 		return nil, err
+		// 	}
+		// 	kv[vk] = vo
+		// }
+		// return &Map{Value: kv}, nil
 	case []Object:
 		return &Array{Value: v}, nil
 	case []interface{}:

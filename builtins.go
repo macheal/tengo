@@ -315,7 +315,7 @@ func builtinLen(args ...Object) (Object, error) {
 	case *Bytes:
 		return &Int{Value: int64(len(arg.Value))}, nil
 	case *Map:
-		return &Int{Value: int64(len(arg.Value))}, nil
+		return &Int{Value: int64(len(arg.Value.Keys()))}, nil
 	case *ImmutableMap:
 		return &Int{Value: int64(len(arg.Value))}, nil
 	default:
@@ -589,7 +589,8 @@ func builtinDelete(args ...Object) (Object, error) {
 	switch arg := args[0].(type) {
 	case *Map:
 		if key, ok := args[1].(*String); ok {
-			delete(arg.Value, key.Value)
+			arg.Value.Delete(key.Value)
+			// delete(arg.Value, key.Value)
 			return UndefinedValue, nil
 		}
 		return nil, ErrInvalidArgumentType{
