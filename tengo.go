@@ -228,7 +228,7 @@ func ToInterface(o Object) (res interface{}) {
 		res = orderedmap.New()
 		for _, key := range o.Value.Keys() {
 			v, _ := o.Value.Get(key)
-			res.(*orderedmap.OrderedMap).Set(key, v)
+			res.(*orderedmap.OrderedMap).Set(key, ToInterface(v.(Object)))
 		}
 		// res = make(map[string]interface{})
 		// for key, v := range o.Value {
@@ -289,13 +289,13 @@ func FromInterface(v interface{}) (Object, error) {
 	case error:
 		return &Error{Value: &String{Value: v.Error()}}, nil
 	case map[string]Object:
-		m := Map{}
+		m := Map{Value: *orderedmap.New()}
 		for key, value := range v {
 			m.Value.Set(key, value)
 		}
 		return &m, nil
 	case map[string]interface{}:
-		m := Map{}
+		m := Map{Value: *orderedmap.New()}
 		for key, value := range v {
 			vo, err := FromInterface(value)
 			if err != nil {

@@ -6,6 +6,7 @@ import (
 	"io"
 	"reflect"
 
+	"github.com/iancoleman/orderedmap"
 	"github.com/macheal/tengo/v2/parser"
 )
 
@@ -293,7 +294,7 @@ func init() {
 	gob.Register(&ImmutableArray{})
 	gob.Register(&ImmutableMap{})
 	gob.Register(&Int{})
-	gob.Register(&Map{})
+	gob.Register(&Map{Value: *orderedmap.New()})
 	gob.Register(&String{})
 	gob.Register(&Time{})
 	gob.Register(&Undefined{})

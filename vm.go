@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"sync/atomic"
 
+	"github.com/iancoleman/orderedmap"
 	"github.com/macheal/tengo/v2/parser"
 	"github.com/macheal/tengo/v2/token"
 )
@@ -302,7 +303,7 @@ func (v *VM) run() {
 			v.sp -= numElements
 
 			// var m Object = &Map{Value: kv}
-			t_map := Map{}
+			t_map := Map{Value: *orderedmap.New()}
 			for key, value := range kv {
 				t_map.Value.Set(key, value)
 			}

@@ -1185,6 +1185,14 @@ type Map struct {
 	// Value map[string]Object
 }
 
+func NewMap(m map[string]Object) *Map {
+	_map := Map{Value: *orderedmap.New()}
+	for k, v := range m {
+		_map.Set(k, v)
+	}
+	return &_map
+}
+
 // TypeName returns the name of the type.
 func (o *Map) TypeName() string {
 	return "map"
@@ -1250,6 +1258,26 @@ func (o *Map) Equals(x Object) bool {
 	}
 	return true
 }
+func (o *Map) Get(key string) (res Object) {
+	v, found := o.Value.Get(key)
+	if !found {
+		return nil
+	}
+	res, err := FromInterface(v)
+	if err != nil {
+		return UndefinedValue
+	}
+	return res
+}
+
+func (o *Map) Set(key string, value Object) (err error) {
+	o.Value.Set(key, value)
+	return nil
+}
+
+func (o *Map) Keys() []string {
+	return o.Value.Keys()
+}
 
 // IndexGet returns the value for the given key.
 func (o *Map) IndexGet(index Object) (res Object, err error) {
@@ -1262,6 +1290,7 @@ func (o *Map) IndexGet(index Object) (res Object, err error) {
 	if !ok {
 		res = UndefinedValue
 	}
+
 	return FromInterface(r)
 	// return ToInterface(r), nil
 }
