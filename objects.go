@@ -1180,7 +1180,9 @@ func (o *Int) Equals(x Object) bool {
 // Map represents a map of objects.
 type Map struct {
 	ObjectImpl
-	Value map[string]Object
+	Value      map[string]Object
+	keys       []string
+	escapeHTML bool
 }
 
 // TypeName returns the name of the type.
@@ -1209,6 +1211,42 @@ func (o *Map) Copy() Object {
 func (o *Map) IsFalsy() bool {
 	return len(o.Value) == 0
 }
+
+func (o *Map) Get(key string) (Object, bool) {
+	val, exists := o.Value[key]
+	return val, exists
+}
+
+func (o *Map) Set(key string, value Object) {
+	_, exists := o.Value[key]
+	if !exists {
+		o.keys = append(o.keys, key)
+	}
+	o.Value[key] = value
+}
+
+// func (o Map) MarshalJSON() ([]byte, error) {
+// 	var buf bytes.Buffer
+// 	buf.WriteByte('{')
+// 	encoder := json.NewEncoder(&buf)
+// 	encoder.SetEscapeHTML(o.escapeHTML)
+// 	for i, k := range o.keys {
+// 		if i > 0 {
+// 			buf.WriteByte(',')
+// 		}
+// 		// add key
+// 		if err := encoder.Encode(k); err != nil {
+// 			return nil, err
+// 		}
+// 		buf.WriteByte(':')
+// 		// add value
+// 		if err := encoder.Encode(o.Value[k]); err != nil {
+// 			return nil, err
+// 		}
+// 	}
+// 	buf.WriteByte('}')
+// 	return buf.Bytes(), nil
+// }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
@@ -1255,7 +1293,8 @@ func (o *Map) IndexSet(index, value Object) (err error) {
 		err = ErrInvalidIndexType
 		return
 	}
-	o.Value[strIdx] = value
+	o.Set(strIdx, value)
+	// o.Value[strIdx] = value
 	return nil
 }
 
