@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"time"
+
+	"github.com/iancoleman/orderedmap"
 )
 
 var (
@@ -221,10 +223,15 @@ func ToInterface(o Object) (res interface{}) {
 			res.([]interface{})[i] = ToInterface(val)
 		}
 	case *Map:
-		res = make(map[string]interface{})
-		for key, v := range o.Value {
-			res.(map[string]interface{})[key] = ToInterface(v)
+		res = orderedmap.New()
+		for _, key := range o.keys {
+			v, _ := o.Get(key)
+			res.(*orderedmap.OrderedMap).Set(key, ToInterface(v))
 		}
+		// res = make(map[string]interface{})
+		// for key, v := range o.Value {
+		// 	res.(map[string]interface{})[key] = ToInterface(v)
+		// }
 	case *ImmutableMap:
 		res = make(map[string]interface{})
 		for key, v := range o.Value {
