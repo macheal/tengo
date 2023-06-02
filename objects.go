@@ -2,7 +2,6 @@ package tengo
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"math"
 	"strconv"
@@ -1226,28 +1225,28 @@ func (o *Map) Set(key string, value Object) {
 	o.Value[key] = value
 }
 
-func (o Map) MarshalJSON() ([]byte, error) {
-	var buf bytes.Buffer
-	buf.WriteByte('{')
-	encoder := json.NewEncoder(&buf)
-	encoder.SetEscapeHTML(o.escapeHTML)
-	for i, k := range o.keys {
-		if i > 0 {
-			buf.WriteByte(',')
-		}
-		// add key
-		if err := encoder.Encode(k); err != nil {
-			return nil, err
-		}
-		buf.WriteByte(':')
-		// add value
-		if err := encoder.Encode(o.Value[k]); err != nil {
-			return nil, err
-		}
-	}
-	buf.WriteByte('}')
-	return buf.Bytes(), nil
-}
+// func (o Map) MarshalJSON() ([]byte, error) {
+// 	var buf bytes.Buffer
+// 	buf.WriteByte('{')
+// 	encoder := json.NewEncoder(&buf)
+// 	encoder.SetEscapeHTML(o.escapeHTML)
+// 	for i, k := range o.keys {
+// 		if i > 0 {
+// 			buf.WriteByte(',')
+// 		}
+// 		// add key
+// 		if err := encoder.Encode(k); err != nil {
+// 			return nil, err
+// 		}
+// 		buf.WriteByte(':')
+// 		// add value
+// 		if err := encoder.Encode(o.Value[k]); err != nil {
+// 			return nil, err
+// 		}
+// 	}
+// 	buf.WriteByte('}')
+// 	return buf.Bytes(), nil
+// }
 
 // Equals returns true if the value of the type is equal to the value of
 // another object.
@@ -1294,7 +1293,8 @@ func (o *Map) IndexSet(index, value Object) (err error) {
 		err = ErrInvalidIndexType
 		return
 	}
-	o.Value[strIdx] = value
+	o.Set(strIdx, value)
+	// o.Value[strIdx] = value
 	return nil
 }
 
