@@ -223,10 +223,17 @@ func ToInterface(o Object) (res interface{}) {
 			res.([]interface{})[i] = ToInterface(val)
 		}
 	case *Map:
-		res = orderedmap.New()
-		for _, key := range o.keys {
-			v, _ := o.Get(key)
-			res.(*orderedmap.OrderedMap).Set(key, ToInterface(v))
+		if len(o.keys) == 0 {
+			res = make(map[string]interface{})
+			for key, v := range o.Value {
+				res.(map[string]interface{})[key] = ToInterface(v)
+			}
+		} else {
+			res = orderedmap.New()
+			for _, key := range o.keys {
+				v, _ := o.Get(key)
+				res.(*orderedmap.OrderedMap).Set(key, ToInterface(v))
+			}
 		}
 		// res = make(map[string]interface{})
 		// for key, v := range o.Value {
