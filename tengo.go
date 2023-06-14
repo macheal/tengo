@@ -223,22 +223,18 @@ func ToInterface(o Object) (res interface{}) {
 			res.([]interface{})[i] = ToInterface(val)
 		}
 	case *Map:
-		if len(o.keys) == 0 {
-			res = make(map[string]interface{})
-			for key, v := range o.Value {
-				res.(map[string]interface{})[key] = ToInterface(v)
-			}
-		} else {
-			res = orderedmap.New()
+		res = orderedmap.New()
+		if len(o.keys) > 0 {
 			for _, key := range o.keys {
 				v, _ := o.Get(key)
 				res.(*orderedmap.OrderedMap).Set(key, ToInterface(v))
 			}
 		}
-		// res = make(map[string]interface{})
-		// for key, v := range o.Value {
-		// 	res.(map[string]interface{})[key] = ToInterface(v)
-		// }
+		if len(o.Value) > len(o.keys) {
+			for key, v := range o.Value {
+				res.(*orderedmap.OrderedMap).Set(key, ToInterface(v))
+			}
+		}
 	case *ImmutableMap:
 		res = make(map[string]interface{})
 		for key, v := range o.Value {
