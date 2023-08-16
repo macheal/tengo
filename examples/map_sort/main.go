@@ -18,7 +18,7 @@ func main() {
 		list.c = "c"
 		list.a = "a"
 
-		return list
+		返回 list
 	}
 	V_RETURN := V_INTERNAL_F()
 `
