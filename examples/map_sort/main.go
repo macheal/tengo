@@ -48,11 +48,6 @@ func run(src string) (res interface{}, err error) {
 
 	}
 
-	if err := compiled.RunContext(context.Background()); err != nil {
-
-		return nil, err
-	}
-
 	//logger.LogDebugf( " 4. RunContext ok ")
 
 	v := compiled.Get(V_RETURN)

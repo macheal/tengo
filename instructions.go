@@ -28,6 +28,12 @@ func MakeInstruction(opcode parser.Opcode, operands ...int) []byte {
 			n := uint16(o)
 			instruction[offset] = byte(n >> 8)
 			instruction[offset+1] = byte(n)
+		case 4:
+			n := uint32(o)
+			instruction[offset] = byte(n >> 24)
+			instruction[offset+1] = byte(n >> 16)
+			instruction[offset+2] = byte(n >> 8)
+			instruction[offset+3] = byte(n)
 		}
 		offset += width
 	}
@@ -55,6 +61,7 @@ func FormatInstructions(b []byte, posOffset int) []string {
 				posOffset+i, parser.OpcodeNames[b[i]],
 				operands[0], operands[1]))
 		}
+
 		i += 1 + read
 	}
 	return out
