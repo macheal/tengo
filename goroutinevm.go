@@ -8,7 +8,7 @@ import (
 )
 
 func init() {
-	addBuiltinFunction("go", builtinGovm, true)
+	addBuiltinFunction("_go", builtinGovm, true)
 	addBuiltinFunction("abort", builtinAbort, true)
 	addBuiltinFunction("makechan", builtinMakechan, false)
 }
@@ -39,6 +39,7 @@ type goroutineVM struct {
 //  1. All its descendant goroutineVMs exit
 //  2. It calls abort()
 //  3. Its goroutineVM object abort() is called on behalf of its parent VM
+//
 // The latter 2 cases will trigger aborting procedure of all the descendant goroutineVMs,
 // which will further result in #1 above.
 func builtinGovm(args ...Object) (Object, error) {
